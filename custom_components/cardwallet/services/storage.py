@@ -31,8 +31,12 @@ class CardStorage:
         async with aiofiles.open(self.file_path, "r", encoding="utf-8") as f:
             contents = await f.read()
             try:
-                data = json.loads(contents)
-                self.cards = [Card(**c) for c in data]
+                raw_list = json.loads(contents) or []
+                normalized_cards = []
+                for c in raw_list:
+                    fmt = c.get("format") or "CODE128"
+                    normalized_cards.append(Card(**{**c, "format": fmt}))
+                self.cards = normalized_cards
             except json.JSONDecodeError:
                 self.cards = []
 
@@ -55,7 +59,7 @@ class CardStorage:
                 card.shared = True
 
     def get_shared_cards(self) -> List[Card]:
-        return [c for c in self.cards if c.shared]
+        return [c for c in self.cards if getattr(c, "shared", False)]
 
     async def update_card(self, user_id: str, card_id: str, new_data: dict) -> Optional[Card]:
         for idx, card in enumerate(self.cards):
@@ -76,6 +80,6 @@ class CardStorage:
 
     async def get_all(self) -> List[Card]:
         return self.cards
-    
+
     async def get_card_by_id(self, card_id: str) -> Optional[Card]:
         return next((c for c in self.cards if c.card_id == card_id), None)
