@@ -8,3 +8,4 @@ class Card:
     code: str
     owner: str
     user_id: str
+    format: Optional[str] = "CODE128"
