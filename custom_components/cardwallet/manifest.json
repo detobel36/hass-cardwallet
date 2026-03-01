@@ -3,7 +3,8 @@
   "name": "HASS Card Wallet",
   "version": "1.0.1",
   "documentation": "https://github.com/rozgonyiadam/hass-cardwallet",
-  "dependencies": [],
+  "dependencies": ["http"],
   "codeowners": [ "@rozgonyiadam" ],
-  "requirements": []
+  "requirements": [],
+  "iot_class": "local_push"
 }

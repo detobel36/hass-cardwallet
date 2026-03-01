@@ -1,6 +1,10 @@
 import os
+import homeassistant.helpers.config_validation as cv
 from .api import CardWalletListAPI, CardWalletItemAPI
 from .services.storage import CardStorage
+
+DOMAIN = "cardwallet"
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass, config):
     storage = CardStorage(hass)
