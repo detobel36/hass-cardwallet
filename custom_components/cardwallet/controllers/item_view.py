@@ -52,11 +52,15 @@ class CardWalletItemAPI(HomeAssistantView):
 
         image_data = data.get("image")
         if image_data:
-            # Delete old image if it was a local file
-            if card.image:
-                await delete_image(self.hass, card.image)
-
-            data["image"] = await save_image(self.hass, image_data)
+            new_image = await save_image(self.hass, image_data)
+            if new_image != card.image:
+                # Delete old image if it was a local file and we have a new one
+                if card.image:
+                    await delete_image(self.hass, card.image)
+                data["image"] = new_image
+            else:
+                # If same image, just use it (or it's already in card.image)
+                data["image"] = card.image
 
         updated = await self.storage.update_card(user_id, card_id, data)
         if updated:

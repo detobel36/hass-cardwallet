@@ -20,7 +20,7 @@ async def save_image(hass: HomeAssistant, image_data) -> str:
     content = None
 
     if isinstance(image_data, str):
-        if image_data.startswith("http"):
+        if image_data.startswith("http") or image_data.startswith("/api/cardwallet/images/"):
             return image_data
         if image_data.startswith("data:image/"):
             try:

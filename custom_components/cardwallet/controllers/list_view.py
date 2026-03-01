@@ -22,6 +22,7 @@ class CardWalletListAPI(HomeAssistantView):
             data = await request.json()
         elif request.content_type == "multipart/form-data":
             data = await request.post()
+            data = dict(data)
         else:
             return self.json({"error": "unsupported content type"}, status_code=400)
 
