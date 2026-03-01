@@ -9,3 +9,4 @@ class Card:
     owner: str
     user_id: str
     format: Optional[str] = "CODE128"
+    image: Optional[str] = None
