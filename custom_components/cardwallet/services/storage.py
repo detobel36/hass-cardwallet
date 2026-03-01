@@ -4,6 +4,7 @@ import os
 from typing import List, Optional
 from .path_utils import get_storage_path
 from custom_components.cardwallet.models.card import Card
+from .image_handler import delete_image
 
 
 class CardStorage:
@@ -35,7 +36,8 @@ class CardStorage:
                 normalized_cards = []
                 for c in raw_list:
                     fmt = c.get("format") or "CODE128"
-                    normalized_cards.append(Card(**{**c, "format": fmt}))
+                    img = c.get("image")
+                    normalized_cards.append(Card(**{**c, "format": fmt, "image": img}))
                 self.cards = normalized_cards
             except json.JSONDecodeError:
                 self.cards = []
@@ -71,9 +73,13 @@ class CardStorage:
         return None
 
     async def delete_card(self, user_id: str, card_id: str) -> bool:
-        original_len = len(self.cards)
-        self.cards = [c for c in self.cards if not (c.card_id == card_id and c.user_id == user_id)]
-        if len(self.cards) < original_len:
+        card_to_delete = next((c for c in self.cards if c.card_id == card_id and c.user_id == user_id), None)
+
+        if card_to_delete:
+            if card_to_delete.image:
+                await delete_image(self.hass, card_to_delete.image)
+
+            self.cards = [c for c in self.cards if not (c.card_id == card_id and c.user_id == user_id)]
             await self._save_cards()
             return True
         return False

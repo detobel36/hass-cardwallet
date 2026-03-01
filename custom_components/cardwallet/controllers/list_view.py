@@ -1,6 +1,7 @@
 from homeassistant.components.http import HomeAssistantView
 from custom_components.cardwallet.models.card import Card
 from custom_components.cardwallet.services.storage import CardStorage
+from custom_components.cardwallet.services.image_handler import save_image
 from uuid import uuid4
 
 class CardWalletListAPI(HomeAssistantView):
@@ -9,6 +10,7 @@ class CardWalletListAPI(HomeAssistantView):
     requires_auth = True
 
     def __init__(self, hass):
+        self.hass = hass
         self.storage = CardStorage(hass)
 
     async def get(self, request):
@@ -16,7 +18,14 @@ class CardWalletListAPI(HomeAssistantView):
         return self.json([card.__dict__ for card in cards])
 
     async def post(self, request):
-        data = await request.json()
+        if request.content_type == "application/json":
+            data = await request.json()
+        elif request.content_type == "multipart/form-data":
+            data = await request.post()
+            data = dict(data)
+        else:
+            return self.json({"error": "unsupported content type"}, status_code=400)
+
         required = ["name", "code", "owner", "user_id"]
 
         if not all(k in data for k in required):
@@ -30,6 +39,10 @@ class CardWalletListAPI(HomeAssistantView):
             card_data["format"] = incoming_format.strip()
         else:
             card_data["format"] = "CODE128"
+
+        image_data = data.get("image")
+        if image_data:
+            card_data["image"] = await save_image(self.hass, image_data)
 
         card = Card(**card_data)
         saved = await self.storage.add_card(card)
